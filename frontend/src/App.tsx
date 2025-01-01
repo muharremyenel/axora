@@ -8,6 +8,7 @@ import DashboardPage from "./pages/dashboard/DashboardPage"
 import TasksPage from "./pages/tasks/TasksPage"
 import CategoriesPage from "./pages/categories/CategoriesPage"
 import TeamsPage from "./pages/teams/TeamsPage"
+import TeamDetailsPage from "./pages/teams/TeamDetailsPage"
 import UserManagementPage from "./pages/users/UserManagementPage"
 import { useAuthStore } from "./store/useAuthStore"
 
@@ -53,14 +54,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/teams"
-              element={
-                <ProtectedRoute>
-                  <TeamsPage />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/teams" element={<TeamsPage />} />
+            <Route path="/teams/:id" element={<TeamDetailsPage />} />
             <Route
               path="/admin/users"
               element={

@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/useAuthStore"
 import { Team } from "@/types/team"
 import TeamFormDialog from "@/components/teams/TeamFormDialog"
 import DeleteDialog from "@/components/common/DeleteDialog"
-import { Navigate } from "react-router-dom"
+import { Navigate, Link } from "react-router-dom"
 
 export default function TeamsPage() {
   const { isAdmin, isAuthenticated } = useAuthStore()
@@ -60,66 +60,36 @@ export default function TeamsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Takımlar</h2>
-          <p className="text-muted-foreground">
-            {isAdmin() ? "Takımları ve üyelerini yönetin" : "Takımları görüntüleyin"}
-          </p>
+          <p className="text-muted-foreground">Takımları görüntüle ve yönet</p>
         </div>
         {isAdmin() && (
-          <Button onClick={handleCreate}>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button onClick={() => setIsFormOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
             Yeni Takım
           </Button>
         )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {teams.map((team) => (
-          <div key={team.id} className="rounded-lg border bg-card">
-            <div className="p-6">
-              <div className="flex items-center justify-between">
+        {teams?.map((team) => (
+          <Link
+            key={team.id}
+            to={`/teams/${team.id}`}
+            className="rounded-lg border bg-card p-6 hover:bg-accent transition-colors"
+          >
+            <div className="space-y-4">
+              <div>
                 <h3 className="text-lg font-medium">{team.name}</h3>
+                <p className="text-sm text-muted-foreground">{team.description}</p>
+              </div>
+              <div className="flex items-center gap-2">
                 <Badge variant={team.active ? "default" : "secondary"}>
                   {team.active ? "Aktif" : "Pasif"}
                 </Badge>
+                <Badge variant="outline">{team.members.length} Üye</Badge>
               </div>
-              {team.description && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {team.description}
-                </p>
-              )}
-              <div className="mt-4">
-                <div className="text-sm font-medium">Üyeler</div>
-                <div className="mt-2 space-y-2">
-                  {team.members.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        {member.name.charAt(0)}
-                      </div>
-                      <span>{member.name}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {isAdmin() && (
-                <div className="mt-4 flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => handleEdit(team)} className="flex-1">
-                    Düzenle
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleDelete(team)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
