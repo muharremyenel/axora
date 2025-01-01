@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
+import { Toaster } from "sonner"
 import LoginPage from "./pages/auth/LoginPage"
 import ProtectedRoute from "./components/auth/ProtectedRoute"
 import MainLayout from "./components/layout/MainLayout"
@@ -10,6 +11,7 @@ import CategoriesPage from "./pages/categories/CategoriesPage"
 import TeamsPage from "./pages/teams/TeamsPage"
 import TeamDetailsPage from "./pages/teams/TeamDetailsPage"
 import UserManagementPage from "./pages/users/UserManagementPage"
+import ProfilePage from "./pages/profile/ProfilePage"
 import { useAuthStore } from "./store/useAuthStore"
 
 const queryClient = new QueryClient()
@@ -44,6 +46,7 @@ function App() {
           >
             <Route path="/" element={<DashboardPage />} />
             <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
             
             {/* Admin routes */}
             <Route
@@ -70,6 +73,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      <Toaster richColors position="top-right" />
       <ReactQueryDevtools />
     </QueryClientProvider>
   )

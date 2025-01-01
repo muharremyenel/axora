@@ -12,37 +12,29 @@ import {
 interface DeleteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onConfirm: () => void
   title: string
   description: string
-  loading?: boolean
+  onConfirm: () => void
 }
 
 export default function DeleteDialog({
   open,
   onOpenChange,
-  onConfirm,
   title,
   description,
-  loading
+  onConfirm,
 }: DeleteDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {description}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>İptal</AlertDialogCancel>
-          <AlertDialogAction 
-            onClick={onConfirm}
-            disabled={loading}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {loading ? "Siliniyor..." : "Sil"}
+          <AlertDialogCancel>İptal</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            Sil
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

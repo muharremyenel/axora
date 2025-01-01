@@ -1,58 +1,45 @@
 import axios from "@/lib/axios"
-import { User } from "@/types/auth"
+import { User } from "@/types/user"
 
-const handleError = (error: any) => {
-  if (error.response?.data?.message) {
-    throw new Error(error.response.data.message)
-  }
-  throw new Error("Bir hata oluştu")
-}
-
-const userService = {
+export const userService = {
   getUsers: async () => {
-    try {
-      const response = await axios.get<User[]>("/users")
-      return response.data
-    } catch (error) {
-      throw handleError(error)
-    }
+    const response = await axios.get<User[]>("/api/users")
+    return response.data
   },
 
   getUserById: async (id: number) => {
-    try {
-      const response = await axios.get<User>(`/users/${id}`)
-      return response.data
-    } catch (error) {
-      throw handleError(error)
-    }
+    const response = await axios.get<User>(`/api/users/${id}`)
+    return response.data
   },
 
   createUser: async (data: Omit<User, "id" | "createdAt" | "updatedAt">) => {
-    try {
-      const response = await axios.post<User>("/users", data)
-      return response.data
-    } catch (error) {
-      throw handleError(error)
-    }
+    const response = await axios.post<User>("/api/users", data)
+    return response.data
   },
 
   updateUser: async (id: number, data: Partial<Omit<User, "id" | "createdAt" | "updatedAt">>) => {
-    try {
-      const response = await axios.put<User>(`/users/${id}`, data)
-      return response.data
-    } catch (error) {
-      throw handleError(error)
-    }
+    const response = await axios.put<User>(`/api/users/${id}`, data)
+    return response.data
   },
 
   deleteUser: async (id: number) => {
-    try {
-      const response = await axios.delete(`/users/${id}`)
-      return response.data
-    } catch (error) {
-      throw handleError(error)
-    }
-  }
-}
+    const response = await axios.delete<void>(`/api/users/${id}`)
+    return response.data
+  },
 
-export { userService } 
+  // Profil yönetimi için yeni metodlar
+  getProfile: async () => {
+    const response = await axios.get<User>("/api/users/profile")
+    return response.data
+  },
+
+  updateProfile: async (data: { name: string; email: string }) => {
+    const response = await axios.put<User>("/api/users/profile", data)
+    return response.data
+  },
+
+  changePassword: async (data: { currentPassword: string; newPassword: string }) => {
+    const response = await axios.put<void>("/api/users/profile/password", data)
+    return response.data
+  },
+} 

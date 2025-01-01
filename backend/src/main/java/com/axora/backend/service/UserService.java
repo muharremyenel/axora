@@ -1,19 +1,22 @@
 package com.axora.backend.service;
 
-import com.axora.backend.dto.user.UserRequest;
-import com.axora.backend.dto.user.UserResponse;
-import com.axora.backend.entity.User;
-import com.axora.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.axora.backend.dto.user.ChangePasswordRequest;
+import com.axora.backend.dto.user.UserRequest;
+import com.axora.backend.dto.user.UserResponse;
+import com.axora.backend.entity.User;
+import com.axora.backend.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -78,6 +81,38 @@ public class UserService implements UserDetailsService {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+    }
+
+    // Profil yönetimi metodları
+    public UserResponse getCurrentUserProfile() {
+        return mapToResponse(getCurrentUser());
+    }
+
+    public UserResponse updateCurrentUserProfile(UserRequest request) {
+        User currentUser = getCurrentUser();
+        
+        // Email değişikliği için kontrol
+        if (!currentUser.getEmail().equals(request.getEmail()) && 
+            userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Bu e-posta adresi zaten kullanılıyor");
+        }
+
+        currentUser.setName(request.getName());
+        currentUser.setEmail(request.getEmail());
+
+        return mapToResponse(userRepository.save(currentUser));
+    }
+
+    public void changePassword(ChangePasswordRequest request) {
+        User currentUser = getCurrentUser();
+
+        // Mevcut şifre kontrolü
+        if (!passwordEncoder.matches(request.getCurrentPassword(), currentUser.getPassword())) {
+            throw new RuntimeException("Mevcut şifre yanlış");
+        }
+
+        currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(currentUser);
     }
 
     private UserResponse mapToResponse(User user) {

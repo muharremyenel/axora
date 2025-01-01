@@ -7,10 +7,20 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { userService } from "@/services/userService"
+import { User } from "@/types/user"
+import { toast } from "@/components/ui/use-toast"
 import {
   Select,
   SelectContent,
@@ -18,8 +28,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { userService } from "@/services/userService"
-import { User, UserRole } from "@/types/auth"
+
+const formSchema = z.object({
+  name: z.string().min(1, "İsim gereklidir"),
+  email: z.string().email("Geçerli bir email adresi giriniz"),
+  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır").optional(),
+  role: z.enum(["ROLE_ADMIN", "ROLE_USER"]),
+  active: z.boolean(),
+})
+
+type FormValues = z.infer<typeof formSchema>
 
 interface UserFormDialogProps {
   open: boolean
@@ -27,57 +45,44 @@ interface UserFormDialogProps {
   user?: User
 }
 
-const userSchema = z.object({
-  name: z.string().min(1, "Ad soyad zorunludur"),
-  email: z.string().email("Geçerli bir e-posta adresi giriniz"),
-  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır").optional(),
-  role: z.enum([UserRole.ROLE_USER, UserRole.ROLE_ADMIN]),
-  active: z.boolean(),
-})
-
-type UserForm = z.infer<typeof userSchema>
-
-export default function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps) {
+export default function UserFormDialog({
+  open,
+  onOpenChange,
+  user,
+}: UserFormDialogProps) {
   const queryClient = useQueryClient()
+  const isEditing = !!user
 
-  const form = useForm<UserForm>({
-    resolver: zodResolver(userSchema),
-    values: user ? {
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      active: user.active
-    } : {
-      name: "",
-      email: "",
-      role: UserRole.ROLE_USER,
-      active: true
-    }
-  })
-
-  const createMutation = useMutation({
-    mutationFn: (data: UserForm) => userService.createUser(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-      onOpenChange(false)
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: user?.name ?? "",
+      email: user?.email ?? "",
+      role: user?.role ?? "ROLE_USER",
+      active: user?.active ?? true,
     },
   })
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UserForm }) => 
-      userService.updateUser(id, data),
+  const mutation = useMutation({
+    mutationFn: (data: FormValues) =>
+      isEditing
+        ? userService.updateUser(user.id, data)
+        : userService.createUser(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] })
       onOpenChange(false)
+      toast({
+        title: "Başarılı",
+        description: isEditing
+          ? "Kullanıcı güncellendi"
+          : "Kullanıcı oluşturuldu",
+      })
+      form.reset()
     },
   })
 
-  const onSubmit = (data: UserForm) => {
-    if (user) {
-      updateMutation.mutate({ id: user.id, data })
-    } else {
-      createMutation.mutate(data)
-    }
+  const onSubmit = (data: FormValues) => {
+    mutation.mutate(data)
   }
 
   return (
@@ -85,90 +90,114 @@ export default function UserFormDialog({ open, onOpenChange, user }: UserFormDia
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {user ? "Kullanıcı Düzenle" : "Yeni Kullanıcı"}
+            {isEditing ? "Kullanıcıyı Düzenle" : "Yeni Kullanıcı"}
           </DialogTitle>
-          <DialogDescription>
-            {user ? "Kullanıcı bilgilerini güncelleyin" : "Yeni bir kullanıcı oluşturun"}
-          </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Input
-              {...form.register("name")}
-              placeholder="Ad Soyad"
-            />
-            {form.formState.errors.name && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.name.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Input
-              {...form.register("email")}
-              type="email"
-              placeholder="E-posta"
-            />
-            {form.formState.errors.email && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.email.message}</p>
-            )}
-          </div>
-
-          {!user && (
-            <div>
-              <Input
-                {...form.register("password")}
-                type="password"
-                placeholder="Şifre"
-              />
-              {form.formState.errors.password && (
-                <p className="text-sm text-destructive mt-1">{form.formState.errors.password.message}</p>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>İsim</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="email" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {!isEditing && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Şifre</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="password" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rol</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Rol seçin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="ROLE_USER">Kullanıcı</SelectItem>
+                      <SelectItem value="ROLE_ADMIN">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="active"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Durum</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value === "true")}
+                    defaultValue={field.value ? "true" : "false"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Durum seçin" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="true">Aktif</SelectItem>
+                      <SelectItem value="false">Pasif</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+              >
+                İptal
+              </Button>
+              <Button type="submit" disabled={mutation.isPending}>
+                {isEditing ? "Güncelle" : "Oluştur"}
+              </Button>
             </div>
-          )}
-
-          <div>
-            <Select
-              {...form.register("role")}
-              defaultValue={user?.role || UserRole.ROLE_USER}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Rol seçin" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={UserRole.ROLE_USER}>Kullanıcı</SelectItem>
-                <SelectItem value={UserRole.ROLE_ADMIN}>Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            {form.formState.errors.role && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.role.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Select
-              {...form.register("active")}
-              defaultValue={user?.active?.toString() || "true"}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Durum seçin" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="true">Aktif</SelectItem>
-                <SelectItem value="false">Pasif</SelectItem>
-              </SelectContent>
-            </Select>
-            {form.formState.errors.active && (
-              <p className="text-sm text-destructive mt-1">{form.formState.errors.active.message}</p>
-            )}
-          </div>
-
-          <div className="flex justify-end">
-            <Button type="submit">
-              {user ? "Güncelle" : "Oluştur"}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )

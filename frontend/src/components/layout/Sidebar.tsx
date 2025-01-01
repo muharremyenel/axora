@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/store/useAuthStore"
-import { CheckSquare, FolderKanban, LayoutDashboard, Users, UserCog, LogOut } from "lucide-react"
+import { CheckSquare, FolderKanban, LayoutDashboard, Users, UserCog, LogOut, User } from "lucide-react"
 
 export default function Sidebar() {
   const location = useLocation()
@@ -12,6 +12,7 @@ export default function Sidebar() {
     { title: "Dashboard", href: "/", icon: LayoutDashboard },
     { title: "Görevler", href: "/tasks", icon: CheckSquare },
     { title: "Takımlar", href: "/teams", icon: Users },
+    { title: "Profil", href: "/profile", icon: User },
   ]
 
   const adminNavItems = [
@@ -20,6 +21,7 @@ export default function Sidebar() {
     { title: "Kategoriler", href: "/categories", icon: FolderKanban },
     { title: "Takımlar", href: "/teams", icon: Users },
     { title: "Kullanıcı Yönetimi", href: "/admin/users", icon: UserCog },
+    { title: "Profil", href: "/profile", icon: User },
   ]
 
   const navItems = isAdmin() ? adminNavItems : userNavItems
