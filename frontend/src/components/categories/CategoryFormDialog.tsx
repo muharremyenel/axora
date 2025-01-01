@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -31,13 +32,17 @@ type CategoryForm = z.infer<typeof categorySchema>
 export default function CategoryFormDialog({ open, onOpenChange, category }: CategoryFormDialogProps) {
   const queryClient = useQueryClient()
 
-  const { register, handleSubmit, formState: { errors } } = useForm<CategoryForm>({
+  const form = useForm<CategoryForm>({
     resolver: zodResolver(categorySchema),
-    defaultValues: category ? {
+    values: category ? {
       name: category.name,
       description: category.description,
-      colorCode: category.colorCode,
-    } : undefined,
+      colorCode: category.colorCode
+    } : {
+      name: "",
+      description: "",
+      colorCode: "#000000"
+    }
   })
 
   const createMutation = useMutation({
@@ -72,36 +77,39 @@ export default function CategoryFormDialog({ open, onOpenChange, category }: Cat
           <DialogTitle>
             {category ? "Kategori Düzenle" : "Yeni Kategori"}
           </DialogTitle>
+          <DialogDescription>
+            {category ? "Kategori bilgilerini güncelleyin" : "Yeni bir kategori oluşturun"}
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <Input
-              {...register("name")}
+              {...form.register("name")}
               placeholder="Kategori adı"
             />
-            {errors.name && (
-              <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+            {form.formState.errors.name && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.name.message}</p>
             )}
           </div>
 
           <div>
             <Textarea
-              {...register("description")}
+              {...form.register("description")}
               placeholder="Kategori açıklaması"
             />
-            {errors.description && (
-              <p className="text-sm text-destructive mt-1">{errors.description.message}</p>
+            {form.formState.errors.description && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.description.message}</p>
             )}
           </div>
 
           <div>
             <Input
-              {...register("colorCode")}
+              {...form.register("colorCode")}
               type="color"
             />
-            {errors.colorCode && (
-              <p className="text-sm text-destructive mt-1">{errors.colorCode.message}</p>
+            {form.formState.errors.colorCode && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.colorCode.message}</p>
             )}
           </div>
 

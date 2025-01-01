@@ -20,16 +20,9 @@ export interface Task {
   status: TaskStatus
   dueDate: string
   categoryId: number
-  category: {
-    id: number
-    name: string
-    colorCode: string
-  }
+  category: string
   assignedUserId: number
-  assignedUser: {
-    id: number
-    name: string
-  }
+  assignedUser: string
   createdAt: string
   updatedAt: string
 }

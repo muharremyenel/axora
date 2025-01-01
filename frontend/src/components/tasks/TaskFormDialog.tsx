@@ -6,7 +6,7 @@ import { taskService } from "@/services/taskService"
 import { categoryService } from "@/services/categoryService"
 import { userService } from "@/services/userService"
 import { Task, TaskPriority } from "@/types/task"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -42,18 +42,23 @@ export default function TaskFormDialog({ open, onOpenChange, task }: TaskFormDia
     queryFn: () => userService.getUsers(),
   })
 
-  const { control, register, handleSubmit, formState: { errors } } = useForm<TaskForm>({
+  const form = useForm<TaskForm>({
     resolver: zodResolver(taskSchema),
-    defaultValues: task ? {
+    values: task ? {
       title: task.title,
       description: task.description,
       priority: task.priority,
       dueDate: task.dueDate,
       categoryId: task.categoryId,
-      assignedUserId: task.assignedUserId,
+      assignedUserId: task.assignedUserId
     } : {
+      title: "",
+      description: "",
       priority: TaskPriority.MEDIUM,
-    },
+      dueDate: "",
+      categoryId: 0,
+      assignedUserId: 0
+    }
   })
 
   const createMutation = useMutation({
@@ -99,33 +104,36 @@ export default function TaskFormDialog({ open, onOpenChange, task }: TaskFormDia
           <DialogTitle>
             {task ? "Görevi Düzenle" : "Yeni Görev"}
           </DialogTitle>
+          <DialogDescription>
+            {task ? "Görev bilgilerini güncelleyin" : "Yeni bir görev oluşturun"}
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <Input
-              {...register("title")}
+              {...form.register("title")}
               placeholder="Görev başlığı"
             />
-            {errors.title && (
-              <p className="text-sm text-destructive mt-1">{errors.title.message}</p>
+            {form.formState.errors.title && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.title.message}</p>
             )}
           </div>
 
           <div>
             <Textarea
-              {...register("description")}
+              {...form.register("description")}
               placeholder="Görev açıklaması"
             />
-            {errors.description && (
-              <p className="text-sm text-destructive mt-1">{errors.description.message}</p>
+            {form.formState.errors.description && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.description.message}</p>
             )}
           </div>
 
           <div>
             <Controller
               name="priority"
-              control={control}
+              control={form.control}
               render={({ field }) => (
                 <Select
                   value={field.value}
@@ -142,15 +150,15 @@ export default function TaskFormDialog({ open, onOpenChange, task }: TaskFormDia
                 </Select>
               )}
             />
-            {errors.priority && (
-              <p className="text-sm text-destructive mt-1">{errors.priority.message}</p>
+            {form.formState.errors.priority && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.priority.message}</p>
             )}
           </div>
 
           <div>
             <Controller
               name="categoryId"
-              control={control}
+              control={form.control}
               render={({ field }) => (
                 <Select
                   value={field.value?.toString() || ""}
@@ -169,15 +177,15 @@ export default function TaskFormDialog({ open, onOpenChange, task }: TaskFormDia
                 </Select>
               )}
             />
-            {errors.categoryId && (
-              <p className="text-sm text-destructive mt-1">{errors.categoryId.message}</p>
+            {form.formState.errors.categoryId && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.categoryId.message}</p>
             )}
           </div>
 
           <div>
             <Controller
               name="assignedUserId"
-              control={control}
+              control={form.control}
               render={({ field }) => (
                 <Select
                   value={field.value?.toString() || ""}
@@ -196,18 +204,18 @@ export default function TaskFormDialog({ open, onOpenChange, task }: TaskFormDia
                 </Select>
               )}
             />
-            {errors.assignedUserId && (
-              <p className="text-sm text-destructive mt-1">{errors.assignedUserId.message}</p>
+            {form.formState.errors.assignedUserId && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.assignedUserId.message}</p>
             )}
           </div>
 
           <div>
             <Input
-              {...register("dueDate")}
+              {...form.register("dueDate")}
               type="date"
             />
-            {errors.dueDate && (
-              <p className="text-sm text-destructive mt-1">{errors.dueDate.message}</p>
+            {form.formState.errors.dueDate && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.dueDate.message}</p>
             )}
           </div>
 

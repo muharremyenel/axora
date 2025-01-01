@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -39,17 +40,19 @@ type UserForm = z.infer<typeof userSchema>
 export default function UserFormDialog({ open, onOpenChange, user }: UserFormDialogProps) {
   const queryClient = useQueryClient()
 
-  const { register, handleSubmit, formState: { errors } } = useForm<UserForm>({
+  const form = useForm<UserForm>({
     resolver: zodResolver(userSchema),
-    defaultValues: user ? {
+    values: user ? {
       name: user.name,
       email: user.email,
       role: user.role,
-      active: user.active,
+      active: user.active
     } : {
+      name: "",
+      email: "",
       role: UserRole.ROLE_USER,
-      active: true,
-    },
+      active: true
+    }
   })
 
   const createMutation = useMutation({
@@ -84,46 +87,49 @@ export default function UserFormDialog({ open, onOpenChange, user }: UserFormDia
           <DialogTitle>
             {user ? "Kullanıcı Düzenle" : "Yeni Kullanıcı"}
           </DialogTitle>
+          <DialogDescription>
+            {user ? "Kullanıcı bilgilerini güncelleyin" : "Yeni bir kullanıcı oluşturun"}
+          </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <Input
-              {...register("name")}
+              {...form.register("name")}
               placeholder="Ad Soyad"
             />
-            {errors.name && (
-              <p className="text-sm text-destructive mt-1">{errors.name.message}</p>
+            {form.formState.errors.name && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.name.message}</p>
             )}
           </div>
 
           <div>
             <Input
-              {...register("email")}
+              {...form.register("email")}
               type="email"
               placeholder="E-posta"
             />
-            {errors.email && (
-              <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+            {form.formState.errors.email && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.email.message}</p>
             )}
           </div>
 
           {!user && (
             <div>
               <Input
-                {...register("password")}
+                {...form.register("password")}
                 type="password"
                 placeholder="Şifre"
               />
-              {errors.password && (
-                <p className="text-sm text-destructive mt-1">{errors.password.message}</p>
+              {form.formState.errors.password && (
+                <p className="text-sm text-destructive mt-1">{form.formState.errors.password.message}</p>
               )}
             </div>
           )}
 
           <div>
             <Select
-              {...register("role")}
+              {...form.register("role")}
               defaultValue={user?.role || UserRole.ROLE_USER}
             >
               <SelectTrigger>
@@ -134,14 +140,14 @@ export default function UserFormDialog({ open, onOpenChange, user }: UserFormDia
                 <SelectItem value={UserRole.ROLE_ADMIN}>Admin</SelectItem>
               </SelectContent>
             </Select>
-            {errors.role && (
-              <p className="text-sm text-destructive mt-1">{errors.role.message}</p>
+            {form.formState.errors.role && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.role.message}</p>
             )}
           </div>
 
           <div>
             <Select
-              {...register("active")}
+              {...form.register("active")}
               defaultValue={user?.active?.toString() || "true"}
             >
               <SelectTrigger>
@@ -152,8 +158,8 @@ export default function UserFormDialog({ open, onOpenChange, user }: UserFormDia
                 <SelectItem value="false">Pasif</SelectItem>
               </SelectContent>
             </Select>
-            {errors.active && (
-              <p className="text-sm text-destructive mt-1">{errors.active.message}</p>
+            {form.formState.errors.active && (
+              <p className="text-sm text-destructive mt-1">{form.formState.errors.active.message}</p>
             )}
           </div>
 
