@@ -1,5 +1,11 @@
 package com.axora.backend.service;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.axora.backend.dto.team.TeamRequest;
 import com.axora.backend.dto.team.TeamResponse;
 import com.axora.backend.dto.user.UserResponse;
@@ -7,12 +13,8 @@ import com.axora.backend.entity.Team;
 import com.axora.backend.entity.User;
 import com.axora.backend.repository.TeamRepository;
 import com.axora.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

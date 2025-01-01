@@ -1,22 +1,34 @@
-import { useQuery } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
+import { useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { userService } from "@/services/userService"
 import { useAuthStore } from "@/store/useAuthStore"
-import { useState } from "react"
 import { User } from "@/types/auth"
 import UserFormDialog from "@/components/users/UserFormDialog"
+import DeleteDialog from "@/components/common/DeleteDialog"
 
 export default function UserManagementPage() {
   const { isAdmin, isAuthenticated } = useAuthStore()
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User>()
+  const queryClient = useQueryClient()
 
   const { data: users = [], isLoading, isError, error } = useQuery({
     queryKey: ["users"],
     queryFn: () => userService.getUsers(),
     enabled: isAuthenticated() && isAdmin(),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => userService.deleteUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      setIsDeleteOpen(false)
+      setSelectedUser(undefined)
+    },
   })
 
   const handleCreate = () => {
@@ -27,6 +39,11 @@ export default function UserManagementPage() {
   const handleEdit = (user: User) => {
     setSelectedUser(user)
     setIsFormOpen(true)
+  }
+
+  const handleDelete = (user: User) => {
+    setSelectedUser(user)
+    setIsDeleteOpen(true)
   }
 
   if (isLoading) {
@@ -83,9 +100,20 @@ export default function UserManagementPage() {
                   </Badge>
                 </td>
                 <td className="px-6 py-4">
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
-                    Düzenle
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(user)}>
+                      Düzenle
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleDelete(user)}
+                      className="text-destructive hover:text-destructive"
+                      disabled={user.id === 1} // Admin kullanıcısını silmeyi engelle
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -97,6 +125,14 @@ export default function UserManagementPage() {
         open={isFormOpen}
         onOpenChange={setIsFormOpen}
         user={selectedUser}
+      />
+      <DeleteDialog
+        open={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        onConfirm={() => selectedUser && deleteMutation.mutate(selectedUser.id)}
+        title="Kullanıcıyı Sil"
+        description="Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve kullanıcıya atanmış görevler etkilenebilir."
+        loading={deleteMutation.isPending}
       />
     </div>
   )

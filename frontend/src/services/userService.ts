@@ -44,6 +44,15 @@ const userService = {
       throw handleError(error)
     }
   },
+
+  deleteUser: async (id: number) => {
+    try {
+      const response = await axios.delete(`/users/${id}`)
+      return response.data
+    } catch (error) {
+      throw handleError(error)
+    }
+  }
 }
 
 export { userService } 

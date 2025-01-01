@@ -1,25 +1,41 @@
 import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { teamService } from "@/services/teamService"
-import { useAuthStore } from "@/store/useAuthStore"
-import TeamFormDialog from "@/components/teams/TeamFormDialog"
-import DeleteTeamDialog from "@/components/teams/DeleteTeamDialog"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Plus, Trash2, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Edit, Plus, Trash2, Users } from "lucide-react"
+import { teamService } from "@/services/teamService"
+import { useAuthStore } from "@/store/useAuthStore"
 import { Team } from "@/types/team"
-import { formatDate } from "@/lib/utils"
+import TeamFormDialog from "@/components/teams/TeamFormDialog"
+import DeleteDialog from "@/components/common/DeleteDialog"
+import { Navigate } from "react-router-dom"
 
 export default function TeamsPage() {
-  const { isAdmin } = useAuthStore()
-  const [selectedTeam, setSelectedTeam] = useState<Team>()
+  const { isAdmin, isAuthenticated } = useAuthStore()
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<Team>()
+  const queryClient = useQueryClient()
 
-  const { data: teams = [], isLoading } = useQuery({
+  const { data: teams = [], isLoading, isError, error } = useQuery({
     queryKey: ["teams"],
     queryFn: () => teamService.getTeams(),
+    enabled: isAuthenticated(),
   })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => teamService.deleteTeam(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teams"] })
+      setIsDeleteOpen(false)
+      setSelectedTeam(undefined)
+    },
+  })
+
+  const handleCreate = () => {
+    setSelectedTeam(undefined)
+    setIsFormOpen(true)
+  }
 
   const handleEdit = (team: Team) => {
     setSelectedTeam(team)
@@ -31,13 +47,12 @@ export default function TeamsPage() {
     setIsDeleteOpen(true)
   }
 
-  const handleCreate = () => {
-    setSelectedTeam(undefined)
-    setIsFormOpen(true)
-  }
-
   if (isLoading) {
     return <div>Yükleniyor...</div>
+  }
+
+  if (isError) {
+    return <div>Hata: {(error as Error).message}</div>
   }
 
   return (
@@ -46,7 +61,7 @@ export default function TeamsPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Takımlar</h2>
           <p className="text-muted-foreground">
-            Takımları ve üyelerini yönetin
+            {isAdmin() ? "Takımları ve üyelerini yönetin" : "Takımları görüntüleyin"}
           </p>
         </div>
         {isAdmin() && (
@@ -57,79 +72,73 @@ export default function TeamsPage() {
         )}
       </div>
 
-      <div className="relative overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs uppercase bg-muted/50">
-            <tr>
-              <th scope="col" className="px-6 py-3">Takım</th>
-              <th scope="col" className="px-6 py-3">Açıklama</th>
-              <th scope="col" className="px-6 py-3">Üyeler</th>
-              <th scope="col" className="px-6 py-3">Oluşturulma Tarihi</th>
-              <th scope="col" className="px-6 py-3">İşlemler</th>
-            </tr>
-          </thead>
-          <tbody>
-            {teams.map((team) => (
-              <tr key={team.id} className="border-b">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{team.name}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {teams.map((team) => (
+          <div key={team.id} className="rounded-lg border bg-card">
+            <div className="p-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">{team.name}</h3>
+                <Badge variant={team.active ? "default" : "secondary"}>
+                  {team.active ? "Aktif" : "Pasif"}
+                </Badge>
+              </div>
+              {team.description && (
+                <p className="mt-2 text-sm text-muted-foreground">
                   {team.description}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-wrap gap-2">
-                    {team.members.map((member) => (
-                      <Badge key={member.id} variant="secondary">
-                        {member.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  {formatDate(team.createdAt)}
-                </td>
-                <td className="px-6 py-4">
-                  {isAdmin() && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEdit(team)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(team)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                </p>
+              )}
+              <div className="mt-4">
+                <div className="text-sm font-medium">Üyeler</div>
+                <div className="mt-2 space-y-2">
+                  {team.members.map((member) => (
+                    <div
+                      key={member.id}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                        {member.name.charAt(0)}
+                      </div>
+                      <span>{member.name}</span>
                     </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  ))}
+                </div>
+              </div>
+              {isAdmin() && (
+                <div className="mt-4 flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(team)} className="flex-1">
+                    Düzenle
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleDelete(team)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
-      <TeamFormDialog
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        team={selectedTeam}
-      />
-
-      {selectedTeam && (
-        <DeleteTeamDialog
-          open={isDeleteOpen}
-          onOpenChange={setIsDeleteOpen}
-          team={selectedTeam}
-        />
+      {isAdmin() && (
+        <>
+          <TeamFormDialog
+            open={isFormOpen}
+            onOpenChange={setIsFormOpen}
+            team={selectedTeam}
+          />
+          <DeleteDialog
+            open={isDeleteOpen}
+            onOpenChange={setIsDeleteOpen}
+            onConfirm={() => selectedTeam && deleteMutation.mutate(selectedTeam.id)}
+            title="Takımı Sil"
+            description="Bu takımı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+            loading={deleteMutation.isPending}
+          />
+        </>
       )}
     </div>
   )

@@ -1,7 +1,7 @@
 import axios from "@/lib/axios"
 import { Team, CreateTeamRequest, UpdateTeamRequest } from "@/types/team"
 
-const teamService = {
+export const teamService = {
   getTeams: () => {
     return axios.get<Team[]>("/api/teams").then((res) => res.data)
   },
@@ -19,8 +19,6 @@ const teamService = {
   },
 
   deleteTeam: (id: number) => {
-    return axios.delete<void>(`/api/teams/${id}`).then((res) => res.data)
-  },
-}
-
-export { teamService } 
+    return axios.delete(`/api/teams/${id}`).then((res) => res.data)
+  }
+} 

@@ -1,38 +1,32 @@
 import { Link, useLocation } from "react-router-dom"
 import { cn } from "@/lib/utils"
-import { useAuthStore } from "@/store/useAuthStore"
-import {
-  LayoutDashboard,
-  CheckSquare,
-  FolderKanban,
-  Users,
-  UserCog,
-  LogOut,
-} from "lucide-react"
 import { Button } from "@/components/ui/button"
-
-const userNavItems = [
-  { title: "Dashboard", href: "/", icon: LayoutDashboard },
-  { title: "Görevler", href: "/tasks", icon: CheckSquare },
-]
-
-const adminNavItems = [
-  { title: "Dashboard", href: "/", icon: LayoutDashboard },
-  { title: "Görevler", href: "/tasks", icon: CheckSquare },
-  { title: "Kategoriler", href: "/categories", icon: FolderKanban },
-  { title: "Takımlar", href: "/teams", icon: Users },
-  { title: "Kullanıcı Yönetimi", href: "/admin/users", icon: UserCog },
-]
+import { useAuthStore } from "@/store/useAuthStore"
+import { CheckSquare, FolderKanban, LayoutDashboard, Users, UserCog, LogOut } from "lucide-react"
 
 export default function Sidebar() {
   const location = useLocation()
   const { isAdmin, logout } = useAuthStore()
 
+  const userNavItems = [
+    { title: "Dashboard", href: "/", icon: LayoutDashboard },
+    { title: "Görevler", href: "/tasks", icon: CheckSquare },
+    { title: "Takımlar", href: "/teams", icon: Users },
+  ]
+
+  const adminNavItems = [
+    { title: "Dashboard", href: "/", icon: LayoutDashboard },
+    { title: "Görevler", href: "/tasks", icon: CheckSquare },
+    { title: "Kategoriler", href: "/categories", icon: FolderKanban },
+    { title: "Takımlar", href: "/teams", icon: Users },
+    { title: "Kullanıcı Yönetimi", href: "/admin/users", icon: UserCog },
+  ]
+
+  const navItems = isAdmin() ? adminNavItems : userNavItems
+
   const handleLogout = async () => {
     logout()
   }
-
-  const navItems = isAdmin() ? adminNavItems : userNavItems
 
   return (
     <div className="fixed inset-y-0 left-0 z-50 w-72 bg-card border-r">

@@ -1,7 +1,7 @@
 import axios from "@/lib/axios"
 import { Category, CreateCategoryRequest, UpdateCategoryRequest } from "@/types/category"
 
-const categoryService = {
+export const categoryService = {
   getCategories: () => {
     return axios.get<Category[]>("/categories").then((res) => res.data)
   },
@@ -19,8 +19,6 @@ const categoryService = {
   },
 
   deleteCategory: (id: number) => {
-    return axios.delete<void>(`/categories/${id}`).then((res) => res.data)
-  },
-}
-
-export { categoryService } 
+    return axios.delete(`/categories/${id}`).then((res) => res.data)
+  }
+} 

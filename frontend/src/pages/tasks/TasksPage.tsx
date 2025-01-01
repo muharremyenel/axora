@@ -1,23 +1,35 @@
-import { useQuery } from "@tanstack/react-query"
-import { Plus } from "lucide-react"
+import { useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { taskService } from "@/services/taskService"
 import { useAuthStore } from "@/store/useAuthStore"
-import { useState } from "react"
 import { Task } from "@/types/task"
-import TaskFormDialog from "@/components/tasks/TaskFormDialog"
 import TaskStatusSelect from "@/components/tasks/TaskStatusSelect"
-import { Badge } from "@/components/ui/badge"
+import TaskFormDialog from "@/components/tasks/TaskFormDialog"
+import DeleteDialog from "@/components/common/DeleteDialog"
 
 export default function TasksPage() {
   const { isAdmin, isAuthenticated } = useAuthStore()
   const [isFormOpen, setIsFormOpen] = useState(false)
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<Task>()
+  const queryClient = useQueryClient()
 
   const { data: tasks = [], isLoading, isError, error } = useQuery({
     queryKey: ["tasks"],
     queryFn: () => isAdmin() ? taskService.getTasks() : taskService.getMyTasks(),
     enabled: isAuthenticated(),
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => taskService.deleteTask(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks"] })
+      setIsDeleteOpen(false)
+      setSelectedTask(undefined)
+    },
   })
 
   const handleCreate = () => {
@@ -28,6 +40,11 @@ export default function TasksPage() {
   const handleEdit = (task: Task) => {
     setSelectedTask(task)
     setIsFormOpen(true)
+  }
+
+  const handleDelete = (task: Task) => {
+    setSelectedTask(task)
+    setIsDeleteOpen(true)
   }
 
   if (isLoading) {
@@ -97,9 +114,19 @@ export default function TasksPage() {
                 <td className="px-6 py-4">{task.dueDate}</td>
                 {isAdmin() && (
                   <td className="px-6 py-4">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(task)}>
-                      Düzenle
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(task)}>
+                        Düzenle
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleDelete(task)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </td>
                 )}
               </tr>
@@ -109,11 +136,21 @@ export default function TasksPage() {
       </div>
 
       {isAdmin() && (
-        <TaskFormDialog
-          open={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          task={selectedTask}
-        />
+        <>
+          <TaskFormDialog
+            open={isFormOpen}
+            onOpenChange={setIsFormOpen}
+            task={selectedTask}
+          />
+          <DeleteDialog
+            open={isDeleteOpen}
+            onOpenChange={setIsDeleteOpen}
+            onConfirm={() => selectedTask && deleteMutation.mutate(selectedTask.id)}
+            title="Görevi Sil"
+            description="Bu görevi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+            loading={deleteMutation.isPending}
+          />
+        </>
       )}
     </div>
   )
