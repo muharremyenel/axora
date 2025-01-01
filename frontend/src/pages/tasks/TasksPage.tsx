@@ -65,12 +65,12 @@ export default function TasksPage() {
             <tr>
               <th scope="col" className="px-6 py-3">Başlık</th>
               <th scope="col" className="px-6 py-3">Açıklama</th>
-              <th scope="col" className="px-6 py-3">Atanan</th>
-              <th scope="col" className="px-6 py-3">Kategori</th>
+              {isAdmin() && <th scope="col" className="px-6 py-3">Atanan</th>}
+              {isAdmin() && <th scope="col" className="px-6 py-3">Kategori</th>}
               <th scope="col" className="px-6 py-3">Öncelik</th>
               <th scope="col" className="px-6 py-3">Durum</th>
               <th scope="col" className="px-6 py-3">Teslim Tarihi</th>
-              <th scope="col" className="px-6 py-3">İşlemler</th>
+              {isAdmin() && <th scope="col" className="px-6 py-3">İşlemler</th>}
             </tr>
           </thead>
           <tbody>
@@ -78,8 +78,8 @@ export default function TasksPage() {
               <tr key={task.id} className="border-b">
                 <td className="px-6 py-4 font-medium">{task.title}</td>
                 <td className="px-6 py-4">{task.description}</td>
-                <td className="px-6 py-4">{task.assignedUser || '-'}</td>
-                <td className="px-6 py-4">{task.category || '-'}</td>
+                {isAdmin() && <td className="px-6 py-4">{task.assignedUser || '-'}</td>}
+                {isAdmin() && <td className="px-6 py-4">{task.category || '-'}</td>}
                 <td className="px-6 py-4">
                   <Badge variant={
                     task.priority === "HIGH" ? "destructive" :
@@ -95,22 +95,26 @@ export default function TasksPage() {
                   <TaskStatusSelect task={task} />
                 </td>
                 <td className="px-6 py-4">{task.dueDate}</td>
-                <td className="px-6 py-4">
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(task)}>
-                    Düzenle
-                  </Button>
-                </td>
+                {isAdmin() && (
+                  <td className="px-6 py-4">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(task)}>
+                      Düzenle
+                    </Button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      <TaskFormDialog
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
-        task={selectedTask}
-      />
+      {isAdmin() && (
+        <TaskFormDialog
+          open={isFormOpen}
+          onOpenChange={setIsFormOpen}
+          task={selectedTask}
+        />
+      )}
     </div>
   )
 } 

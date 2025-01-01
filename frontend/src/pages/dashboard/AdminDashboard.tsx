@@ -1,7 +1,42 @@
+import { useQuery } from "@tanstack/react-query"
 import { Users, CheckSquare, FolderKanban, Users2 } from "lucide-react"
 import StatsCard from "@/components/dashboard/StatsCard"
+import { userService } from "@/services/userService"
+import { taskService } from "@/services/taskService"
+import { categoryService } from "@/services/categoryService"
+import { teamService } from "@/services/teamService"
+import { TaskStatus } from "@/types/task"
 
 export default function AdminDashboard() {
+  const { data: users = [] } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => userService.getUsers(),
+  })
+
+  const { data: tasks = [] } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: () => taskService.getTasks(),
+  })
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => categoryService.getCategories(),
+  })
+
+  const { data: teams = [] } = useQuery({
+    queryKey: ["teams"],
+    queryFn: () => teamService.getTeams(),
+  })
+
+  const activeTasks = tasks.filter(task => task.status !== TaskStatus.DONE)
+  const thisMonth = new Date()
+  const tasksThisMonth = tasks.filter(task => {
+    const createdDate = new Date(task.createdAt)
+    return createdDate.getMonth() === thisMonth.getMonth()
+  })
+
+  const activeTeams = teams.filter(team => team.active)
+
   return (
     <div className="space-y-6">
       <div>
@@ -14,27 +49,30 @@ export default function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Toplam Kullanıcı"
-          value={150}
+          value={users.length}
           icon={Users}
-          trend={{ value: 12, isPositive: true }}
+          trend={{ value: users.filter(u => {
+            const createdDate = new Date(u.createdAt)
+            return createdDate.getMonth() === thisMonth.getMonth()
+          }).length, isPositive: true }}
         />
         <StatsCard
           title="Aktif Görevler"
-          value={89}
+          value={activeTasks.length}
           icon={CheckSquare}
           description="Bu ay oluşturulan"
-          trend={{ value: 8, isPositive: true }}
+          trend={{ value: tasksThisMonth.length, isPositive: true }}
         />
         <StatsCard
           title="Kategoriler"
-          value={24}
+          value={categories.length}
           icon={FolderKanban}
         />
         <StatsCard
           title="Takımlar"
-          value={12}
+          value={teams.length}
           icon={Users2}
-          description="8 aktif proje"
+          description={`${activeTeams.length} aktif takım`}
         />
       </div>
 
@@ -45,10 +83,25 @@ export default function AdminDashboard() {
               <h3 className="text-lg font-medium">Son Eklenen Kullanıcılar</h3>
             </div>
             <div className="p-6 pt-0">
-              {/* Kullanıcı listesi buraya gelecek */}
-              <div className="text-sm text-muted-foreground">
-                Henüz veri yok
-              </div>
+              {users.length > 0 ? (
+                <div className="space-y-4">
+                  {users
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .slice(0, 5)
+                    .map(user => (
+                      <div key={user.id} className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{user.name}</div>
+                          <div className="text-sm text-muted-foreground">{user.email}</div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Henüz veri yok
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -58,10 +111,32 @@ export default function AdminDashboard() {
               <h3 className="text-lg font-medium">Görev Durumları</h3>
             </div>
             <div className="p-6 pt-0">
-              {/* Görev durumları grafiği buraya gelecek */}
-              <div className="text-sm text-muted-foreground">
-                Henüz veri yok
-              </div>
+              {tasks.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>Yapılacak</div>
+                    <div className="font-medium">
+                      {tasks.filter(t => t.status === TaskStatus.TODO).length}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>Devam Eden</div>
+                    <div className="font-medium">
+                      {tasks.filter(t => t.status === TaskStatus.IN_PROGRESS).length}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>Tamamlanan</div>
+                    <div className="font-medium">
+                      {tasks.filter(t => t.status === TaskStatus.DONE).length}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground">
+                  Henüz veri yok
+                </div>
+              )}
             </div>
           </div>
         </div>

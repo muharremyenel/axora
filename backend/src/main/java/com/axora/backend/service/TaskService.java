@@ -1,20 +1,23 @@
 package com.axora.backend.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+
 import com.axora.backend.dto.task.TaskRequest;
 import com.axora.backend.dto.task.TaskResponse;
 import com.axora.backend.entity.Category;
+import com.axora.backend.entity.Role;
 import com.axora.backend.entity.Task;
 import com.axora.backend.entity.TaskStatus;
 import com.axora.backend.entity.User;
 import com.axora.backend.repository.CategoryRepository;
 import com.axora.backend.repository.TaskRepository;
 import com.axora.backend.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -109,6 +112,12 @@ public class TaskService {
     public TaskResponse updateTaskStatus(Long id, TaskStatus status) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Görev bulunamadı"));
+
+        User currentUser = userService.getCurrentUser();
+        if (!currentUser.getRole().equals(Role.ROLE_ADMIN) && 
+            !task.getAssignedUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Bu görevi güncelleme yetkiniz yok");
+        }
 
         task.setStatus(status);
         Task updatedTask = taskRepository.save(task);

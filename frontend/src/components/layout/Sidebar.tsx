@@ -14,11 +14,13 @@ import { Button } from "@/components/ui/button"
 const userNavItems = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard },
   { title: "Görevler", href: "/tasks", icon: CheckSquare },
-  { title: "Kategoriler", href: "/categories", icon: FolderKanban },
-  { title: "Takımlar", href: "/teams", icon: Users },
 ]
 
 const adminNavItems = [
+  { title: "Dashboard", href: "/", icon: LayoutDashboard },
+  { title: "Görevler", href: "/tasks", icon: CheckSquare },
+  { title: "Kategoriler", href: "/categories", icon: FolderKanban },
+  { title: "Takımlar", href: "/teams", icon: Users },
   { title: "Kullanıcı Yönetimi", href: "/admin/users", icon: UserCog },
 ]
 
@@ -30,7 +32,7 @@ export default function Sidebar() {
     logout()
   }
 
-  const navItems = [...userNavItems, ...(isAdmin() ? adminNavItems : [])]
+  const navItems = isAdmin() ? adminNavItems : userNavItems
 
   return (
     <div className="fixed inset-y-0 left-0 z-50 w-72 bg-card border-r">
