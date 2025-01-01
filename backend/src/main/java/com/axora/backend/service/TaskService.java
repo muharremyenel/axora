@@ -2,21 +2,19 @@ package com.axora.backend.service;
 
 import com.axora.backend.dto.task.TaskRequest;
 import com.axora.backend.dto.task.TaskResponse;
-import com.axora.backend.dto.task.TaskStatusUpdateRequest;
-import com.axora.backend.dto.user.UserSummary;
-import com.axora.backend.entity.*;
+import com.axora.backend.entity.Category;
+import com.axora.backend.entity.Task;
+import com.axora.backend.entity.TaskStatus;
+import com.axora.backend.entity.User;
 import com.axora.backend.repository.CategoryRepository;
 import com.axora.backend.repository.TaskRepository;
 import com.axora.backend.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,110 +23,103 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
-    private final CategoryService categoryService;
+    private final UserService userService;
 
-    @Transactional
+    public List<TaskResponse> getTasksByCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        return taskRepository.findByAssignedUser(user).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     public TaskResponse createTask(TaskRequest request) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        
-        Category category = null;
-        if (request.getCategoryId() != null) {
-            category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new EntityNotFoundException("Kategori bulunamadı"));
-        }
+        User currentUser = userService.getCurrentUser();
+        User assignedUser = userRepository.findById(request.getAssignedUserId())
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
-        User assignedUser = null;
-        if (request.getAssignedUserId() != null) {
-            assignedUser = userRepository.findById(request.getAssignedUserId())
-                    .orElseThrow(() -> new EntityNotFoundException("Kullanıcı bulunamadı"));
-        }
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Kategori bulunamadı"));
 
         Task task = Task.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
+                .dueDate(request.getDueDate())
                 .priority(request.getPriority())
-                .category(category)
+                .status(TaskStatus.TODO)
                 .assignedUser(assignedUser)
                 .createdBy(currentUser)
-                .dueDate(request.getDueDate())
+                .category(category)
                 .build();
 
-        task = taskRepository.save(task);
-        return mapToResponse(task);
+        Task savedTask = taskRepository.save(task);
+        return mapToResponse(savedTask);
     }
 
-    @Transactional(readOnly = true)
-    public Page<TaskResponse> getTasks(Pageable pageable) {
-        return taskRepository.findAll(pageable)
-                .map(this::mapToResponse);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<TaskResponse> getMyTasks(Pageable pageable) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return taskRepository.findByAssignedUser(currentUser, pageable)
-                .map(this::mapToResponse);
-    }
-
-    @Transactional(readOnly = true)
-    public TaskResponse getTaskById(Long id) {
-        return taskRepository.findById(id)
+    public List<TaskResponse> getAllTasks() {
+        return taskRepository.findAll().stream()
                 .map(this::mapToResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Görev bulunamadı"));
+                .collect(Collectors.toList());
     }
 
-    @Transactional
-    public TaskResponse updateTaskStatus(Long id, TaskStatusUpdateRequest request) {
+    public TaskResponse getTaskById(Long id) {
         Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Görev bulunamadı"));
-
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        
-        if (!currentUser.equals(task.getAssignedUser()) && !currentUser.equals(task.getCreatedBy())) {
-            throw new RuntimeException("Bu görevi güncelleme yetkiniz yok");
-        }
-
-        task.setStatus(request.getStatus());
-        task = taskRepository.save(task);
+                .orElseThrow(() -> new RuntimeException("Görev bulunamadı"));
         return mapToResponse(task);
     }
 
-    @Transactional
+    public List<TaskResponse> getTasksByAssignedUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        return taskRepository.findByAssignedUser(user).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<TaskResponse> getTasksByCategory(Long categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Kategori bulunamadı"));
+        return taskRepository.findByCategory(category).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public TaskResponse updateTask(Long id, TaskRequest request) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Görev bulunamadı"));
+
+        User assignedUser = userRepository.findById(request.getAssignedUserId())
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new RuntimeException("Kategori bulunamadı"));
+
+        task.setTitle(request.getTitle());
+        task.setDescription(request.getDescription());
+        task.setDueDate(request.getDueDate());
+        task.setPriority(request.getPriority());
+        task.setAssignedUser(assignedUser);
+        task.setCategory(category);
+
+        Task updatedTask = taskRepository.save(task);
+        return mapToResponse(updatedTask);
+    }
+
+    public TaskResponse updateTaskStatus(Long id, TaskStatus status) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Görev bulunamadı"));
+
+        task.setStatus(status);
+        Task updatedTask = taskRepository.save(task);
+        return mapToResponse(updatedTask);
+    }
+
     public void deleteTask(Long id) {
         if (!taskRepository.existsById(id)) {
-            throw new EntityNotFoundException("Görev bulunamadı");
+            throw new RuntimeException("Görev bulunamadı");
         }
         taskRepository.deleteById(id);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<TaskResponse> getTasksWithFilters(
-            TaskStatus status,
-            TaskPriority priority,
-            Long categoryId,
-            Long assignedUserId,
-            LocalDateTime dueDateStart,
-            LocalDateTime dueDateEnd,
-            Pageable pageable) {
-        return taskRepository.findByFilters(
-                status, priority, categoryId, assignedUserId, 
-                dueDateStart, dueDateEnd, pageable)
-                .map(this::mapToResponse);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<TaskResponse> getMyTasksWithFilters(
-            TaskStatus status,
-            TaskPriority priority,
-            Long categoryId,
-            LocalDateTime dueDateStart,
-            LocalDateTime dueDateEnd,
-            Pageable pageable) {
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return taskRepository.findByFilters(
-                status, priority, categoryId, currentUser.getId(), 
-                dueDateStart, dueDateEnd, pageable)
-                .map(this::mapToResponse);
     }
 
     private TaskResponse mapToResponse(Task task) {
@@ -136,23 +127,15 @@ public class TaskService {
                 .id(task.getId())
                 .title(task.getTitle())
                 .description(task.getDescription())
-                .status(task.getStatus())
-                .priority(task.getPriority())
-                .category(task.getCategory() != null ? categoryService.getCategoryById(task.getCategory().getId()) : null)
-                .assignedUser(task.getAssignedUser() != null ? mapToUserSummary(task.getAssignedUser()) : null)
-                .createdBy(mapToUserSummary(task.getCreatedBy()))
                 .dueDate(task.getDueDate())
+                .priority(task.getPriority())
+                .status(task.getStatus())
+                .assignedUser(task.getAssignedUser() != null ? task.getAssignedUser().getName() : null)
+                .assignedUserId(task.getAssignedUser() != null ? task.getAssignedUser().getId() : null)
+                .category(task.getCategory() != null ? task.getCategory().getName() : null)
+                .categoryId(task.getCategory() != null ? task.getCategory().getId() : null)
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
-                .build();
-    }
-
-    private UserSummary mapToUserSummary(User user) {
-        return UserSummary.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .profilePicture(user.getProfilePicture())
                 .build();
     }
 } 

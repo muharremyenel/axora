@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -47,7 +49,7 @@ public class Task {
     private User createdBy;
 
     @Column(name = "due_date")
-    private java.time.LocalDateTime dueDate;
+    private LocalDate dueDate;
 
     @Column(name = "created_at", nullable = false)
     @Builder.Default

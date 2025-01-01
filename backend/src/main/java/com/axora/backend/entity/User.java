@@ -9,10 +9,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Data
 @Builder
@@ -21,6 +20,7 @@ import java.util.Set;
 @Entity
 @Table(name = "users")
 public class User implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,27 +35,26 @@ public class User implements UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private UserRole role = UserRole.ROLE_USER;
+    private Role role;
 
-    private String profilePicture;
+    private boolean active;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private boolean active = true;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "assignedUser")
-    @Builder.Default
-    private Set<Task> assignedTasks = new HashSet<>();
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
-    @ManyToMany(mappedBy = "members")
-    @Builder.Default
-    private Set<Team> teams = new HashSet<>();
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
 
-    @Column(nullable = false)
-    @Builder.Default
-    private java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
