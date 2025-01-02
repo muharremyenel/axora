@@ -13,6 +13,8 @@ import TeamDetailsPage from "./pages/teams/TeamDetailsPage"
 import UserManagementPage from "./pages/users/UserManagementPage"
 import ProfilePage from "./pages/profile/ProfilePage"
 import { useAuthStore } from "./store/useAuthStore"
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage"
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage"
 
 const queryClient = new QueryClient()
 
@@ -68,6 +70,9 @@ function App() {
               }
             />
           </Route>
+
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />

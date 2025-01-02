@@ -7,6 +7,9 @@ import { authService } from "@/services/authService"
 import { useAuthStore } from "@/store/useAuthStore"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { toast } from "@/components/ui/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 const loginSchema = z.object({
   email: z.string().email("Geçerli bir e-posta adresi giriniz"),
@@ -29,6 +32,13 @@ export default function LoginPage() {
       setAuth(data.user, data.token)
       navigate("/")
     },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: error.response?.data?.message || "Giriş yapılırken bir hata oluştu",
+      })
+    }
   })
 
   const onSubmit = (data: LoginForm) => {
@@ -43,7 +53,17 @@ export default function LoginPage() {
             Giriş Yap
           </h2>
         </div>
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+          {loginMutation.isError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                E-posta veya şifre hatalı
+              </AlertDescription>
+            </Alert>
+          )}
+
           <div className="space-y-4">
             <div>
               <Input
@@ -71,15 +91,25 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loginMutation.isPending}
-            >
-              {loginMutation.isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
-            </Button>
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <Button
+                variant="link"
+                className="text-primary hover:text-primary/90"
+                onClick={() => navigate("/forgot-password")}
+              >
+                Şifremi Unuttum
+              </Button>
+            </div>
           </div>
+
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={loginMutation.isPending}
+          >
+            {loginMutation.isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
+          </Button>
         </form>
       </div>
     </div>

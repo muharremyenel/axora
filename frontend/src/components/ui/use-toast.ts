@@ -1,8 +1,9 @@
 import { toast as sonnerToast } from "sonner"
 
-type ToastProps = {
-  title: string
-  description: string
+export interface ToastProps {
+  variant?: "default" | "destructive";
+  title?: string;
+  description?: string;
 }
 
 export const toast = ({ title, description }: ToastProps) => {

@@ -30,6 +30,16 @@ services:
       - axora-network
     restart: unless-stopped
 
+  mailhog:
+    container_name: axora-mailhog
+    image: mailhog/mailhog
+    ports:
+      - "1026:1025" # SMTP port
+      - "8026:8025" # Web UI port
+    networks:
+      - axora-network
+    restart: unless-stopped
+
 networks:
   axora-network:
     driver: bridge
