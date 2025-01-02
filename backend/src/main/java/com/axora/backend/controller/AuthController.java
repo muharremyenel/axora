@@ -33,6 +33,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request) {
+        // Hata yönetimi burada olabilir
         return ResponseEntity.ok(authService.login(request));
     }
 

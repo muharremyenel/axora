@@ -18,15 +18,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { tr } from "date-fns/locale"
-import { CalendarIcon, AlertCircle, ChevronsUpDown, Check } from "lucide-react"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+import { CalendarIcon, AlertCircle } from "lucide-react"
+
 
 const taskSchema = z.object({
   title: z.string().min(3, "En az 3 karakter olmalıdır"),
