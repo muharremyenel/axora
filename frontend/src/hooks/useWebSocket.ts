@@ -8,6 +8,7 @@ export function useWebSocket() {
     const clientRef = useRef<Client | null>(null);
     const { user } = useAuthStore();
     const { addNotification } = useNotificationStore();
+    const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
     useEffect(() => {
         if (!user) return;
@@ -17,54 +18,58 @@ export function useWebSocket() {
             connectHeaders: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             },
-            debug: function (str) {
-                console.log('STOMP:', str);
-            },
-            reconnectDelay: 5000,
-            heartbeatIncoming: 4000,
-            heartbeatOutgoing: 4000,
+            debug: () => {},
+            reconnectDelay: 30000,
+            heartbeatIncoming: 20000,
+            heartbeatOutgoing: 20000,
             onConnect: () => {
-                console.log('WebSocket bağlantısı kuruldu, User:', user.email);
+                const currentClient = clientRef.current;
+                if (currentClient?.connected) {
+                    currentClient.unsubscribe(`/user/${user.id}/notifications`);
+                }
+
                 client.subscribe(`/user/${user.id}/notifications`, message => {
                     try {
                         const notification = JSON.parse(message.body);
-                        console.log('Yeni bildirim alındı:', notification);
                         addNotification(notification);
                         toast({
                             title: notification.title,
                             description: notification.message,
                         });
                     } catch (error) {
-                        console.error('Bildirim işlenirken hata:', error);
+                        // Sessizce hata yönetimi
                     }
                 });
             },
-            onStompError: (frame) => {
-                console.error('STOMP Hatası:', frame);
-            },
-            onWebSocketError: (event) => {
-                console.error('WebSocket Hatası:', event);
+            onStompError: () => {
+                // Sadece gerçek hataları logla
+                if (reconnectTimeoutRef.current) {
+                    clearTimeout(reconnectTimeoutRef.current);
+                }
+                reconnectTimeoutRef.current = setTimeout(() => {
+                    const currentClient = clientRef.current;
+                    if (currentClient && !currentClient.connected) {
+                        currentClient.activate();
+                    }
+                }, 30000);
             }
         });
 
-        client.activate();
         clientRef.current = client;
 
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                client.deactivate();
-            } else {
-                client.activate();
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
+        if (!document.hidden) {
+            client.activate();
+        }
 
         return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            if (clientRef.current) {
-                clientRef.current.deactivate();
+            if (reconnectTimeoutRef.current) {
+                clearTimeout(reconnectTimeoutRef.current);
+            }
+            const currentClient = clientRef.current;
+            if (currentClient?.connected) {
+                currentClient.unsubscribe(`/user/${user.id}/notifications`);
+                currentClient.deactivate();
             }
         };
-    }, [user, addNotification]);
+    }, [user?.id]);
 } 

@@ -10,6 +10,7 @@ interface StatsCardProps {
     value: number
     isPositive: boolean
   }
+  className?: string
 }
 
 export default function StatsCard({
@@ -18,9 +19,10 @@ export default function StatsCard({
   icon: Icon,
   description,
   trend,
+  className,
 }: StatsCardProps) {
   return (
-    <div className="rounded-lg border bg-card p-6">
+    <div className={cn("rounded-lg border bg-card p-6", className)}>
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-muted-foreground">{title}</p>
         <Icon className="h-4 w-4 text-muted-foreground" />

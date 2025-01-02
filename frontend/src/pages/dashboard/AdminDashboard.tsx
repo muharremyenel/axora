@@ -40,10 +40,10 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">
-          Sistem geneli istatistikler ve metrikler
-        </p>
+        <h2 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-600">
+          Yönetim Paneli
+        </h2>
+        <p className="text-muted-foreground">Sistem geneli istatistikler ve metrikler</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -51,10 +51,7 @@ export default function AdminDashboard() {
           title="Toplam Kullanıcı"
           value={users.length}
           icon={Users}
-          trend={{ value: users.filter(u => {
-            const createdDate = new Date(u.createdAt)
-            return createdDate.getMonth() === thisMonth.getMonth()
-          }).length, isPositive: true }}
+          className="bg-white/50 backdrop-blur-lg border-white/20 shadow-lg hover:shadow-xl transition-all"
         />
         <StatsCard
           title="Aktif Görevler"

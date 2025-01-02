@@ -57,7 +57,7 @@ export const taskService = {
 
   updateTaskStatus: async (taskId: number, status: TaskStatus) => {
     try {
-      const response = await axios.patch<TaskResponse>(
+      const response = await axios.patch<Task>(
         `/tasks/${taskId}/status`,
         { status },
         {
@@ -84,7 +84,7 @@ export const taskService = {
 
   getTaskComments: async (taskId: number) => {
     try {
-      const response = await axios.get<CommentResponse[]>(`/api/tasks/${taskId}/comments`)
+      const response = await axios.get<CommentResponse[]>(`/tasks/${taskId}/comments`)
       return response.data
     } catch (error) {
       throw handleError(error)
@@ -93,16 +93,25 @@ export const taskService = {
 
   addComment: async (taskId: number, data: CommentRequest) => {
     try {
-      const response = await axios.post<CommentResponse>(`/api/tasks/${taskId}/comments`, data)
-      return response.data
+      const response = await axios.post<CommentResponse>(
+        `/tasks/${taskId}/comments`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
     } catch (error) {
-      throw handleError(error)
+      console.error('Yorum eklenirken hata:', error);
+      throw error;
     }
   },
 
   deleteComment: async (taskId: number, commentId: number) => {
     try {
-      await axios.delete(`/api/tasks/${taskId}/comments/${commentId}`)
+      await axios.delete(`/tasks/${taskId}/comments/${commentId}`)
     } catch (error) {
       throw handleError(error)
     }
@@ -110,7 +119,7 @@ export const taskService = {
 
   updateComment: async (taskId: number, commentId: number, data: CommentRequest) => {
     try {
-      const response = await axios.put<CommentResponse>(`/api/tasks/${taskId}/comments/${commentId}`, data)
+      const response = await axios.put<CommentResponse>(`/tasks/${taskId}/comments/${commentId}`, data)
       return response.data
     } catch (error) {
       throw handleError(error)

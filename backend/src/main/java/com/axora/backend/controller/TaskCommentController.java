@@ -3,6 +3,7 @@ package com.axora.backend.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,13 +22,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/tasks/{taskId}/comments")
+@RequestMapping("/tasks/{taskId}/comments")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5173")
 public class TaskCommentController {
     private final TaskCommentService commentService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<CommentResponse> addComment(
             @PathVariable Long taskId,
             @Valid @RequestBody CommentRequest request) {
@@ -35,6 +37,7 @@ public class TaskCommentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<CommentResponse>> getTaskComments(@PathVariable Long taskId) {
         return ResponseEntity.ok(commentService.getTaskComments(taskId));
     }

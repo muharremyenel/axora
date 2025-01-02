@@ -41,10 +41,10 @@ export default function UserDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">
-          Görevleriniz ve performans metrikleriniz
-        </p>
+        <h2 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-blue-600">
+          Hoş Geldin
+        </h2>
+        <p className="text-muted-foreground">Görevlerini ve performansını buradan takip edebilirsin</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -52,7 +52,7 @@ export default function UserDashboard() {
           title="Aktif Görevler"
           value={activeTasks.length}
           icon={CheckSquare}
-          description="Devam eden"
+          className="bg-white/50 backdrop-blur-lg border-white/20 shadow-lg hover:shadow-xl transition-all"
         />
         <StatsCard
           title="Yaklaşan Teslim"
@@ -98,6 +98,7 @@ export default function UserDashboard() {
                           {formatDate(task.dueDate)}
                         </div>
                       </div>
+
                     </div>
                   ))
                 ) : (
@@ -128,6 +129,7 @@ export default function UserDashboard() {
                       <div className="flex-1">
                         <div className="font-medium">{task.title}</div>
                       </div>
+
                     </div>
                   ))
                 ) : (
