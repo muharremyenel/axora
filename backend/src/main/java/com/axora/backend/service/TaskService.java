@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import com.axora.backend.dto.task.TaskRequest;
 import com.axora.backend.dto.task.TaskResponse;
 import com.axora.backend.entity.Category;
-import com.axora.backend.entity.Role;
+import com.axora.backend.entity.NotificationType;
 import com.axora.backend.entity.Task;
 import com.axora.backend.entity.TaskStatus;
 import com.axora.backend.entity.User;
@@ -18,15 +18,18 @@ import com.axora.backend.repository.TaskRepository;
 import com.axora.backend.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     public List<TaskResponse> getTasksByCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -57,6 +60,18 @@ public class TaskService {
                 .build();
 
         Task savedTask = taskRepository.save(task);
+
+        notificationService.createNotification(
+            assignedUser,
+            savedTask,
+            "Yeni Görev Atandı",
+            String.format("%s size yeni bir görev atadı: %s", currentUser.getName(), task.getTitle()),
+            NotificationType.TASK_ASSIGNED
+        );
+
+        log.info("Yeni görev oluşturuldu - ID: {}, Başlık: {}, Atanan: {}", 
+            savedTask.getId(), savedTask.getTitle(), assignedUser.getEmail());
+
         return mapToResponse(savedTask);
     }
 
@@ -109,19 +124,40 @@ public class TaskService {
         return mapToResponse(updatedTask);
     }
 
-    public TaskResponse updateTaskStatus(Long id, TaskStatus status) {
+    public TaskResponse updateTaskStatus(Long id, TaskStatus newStatus) {
         Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Görev bulunamadı"));
+            .orElseThrow(() -> new RuntimeException("Görev bulunamadı"));
+        
+        TaskStatus oldStatus = task.getStatus();
+        task.setStatus(newStatus);
+        task = taskRepository.save(task);
 
-        User currentUser = userService.getCurrentUser();
-        if (!currentUser.getRole().equals(Role.ROLE_ADMIN) && 
-            !task.getAssignedUser().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Bu görevi güncelleme yetkiniz yok");
+        // Admin'e bildirim gönder
+        if (!userService.getCurrentUser().getId().equals(task.getCreatedBy().getId())) {
+            notificationService.createNotification(
+                task.getCreatedBy(),  // Admin'e bildirim
+                task,
+                "Görev Durumu Değişti",
+                String.format("%s görevi %s durumuna güncellendi", task.getTitle(), newStatus),
+                NotificationType.TASK_STATUS_CHANGED
+            );
         }
 
-        task.setStatus(status);
-        Task updatedTask = taskRepository.save(task);
-        return mapToResponse(updatedTask);
+        // Atanan kullanıcıya bildirim gönder
+        if (!userService.getCurrentUser().getId().equals(task.getAssignedUser().getId())) {
+            notificationService.createNotification(
+                task.getAssignedUser(),  // Atanan kullanıcıya bildirim
+                task,
+                "Görev Durumu Değişti",
+                String.format("%s görevi %s durumuna güncellendi", task.getTitle(), newStatus),
+                NotificationType.TASK_STATUS_CHANGED
+            );
+        }
+
+        log.info("Görev durumu güncellendi - ID: {}, Eski Durum: {}, Yeni Durum: {}", 
+            id, oldStatus, newStatus);
+
+        return mapToResponse(task);
     }
 
     public void deleteTask(Long id) {

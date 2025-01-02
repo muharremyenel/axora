@@ -55,12 +55,21 @@ export const taskService = {
     }
   },
 
-  updateTaskStatus: async (id: number, status: TaskStatus) => {
+  updateTaskStatus: async (taskId: number, status: TaskStatus) => {
     try {
-      const response = await axios.patch<Task>(`/tasks/${id}/status`, { status })
-      return response.data
+      const response = await axios.patch<TaskResponse>(
+        `/tasks/${taskId}/status`,
+        { status },
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        }
+      );
+      return response.data;
     } catch (error) {
-      throw handleError(error)
+      console.error('Task status güncellenirken hata:', error);
+      throw error;
     }
   },
 

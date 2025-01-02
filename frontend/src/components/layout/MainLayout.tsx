@@ -1,8 +1,11 @@
 import { Outlet } from "react-router-dom"
 import Sidebar from "./Sidebar"
 import Navbar from "./Navbar"
+import { useWebSocket } from '@/hooks/useWebSocket';
 
 export default function MainLayout() {
+  useWebSocket();
+  
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />

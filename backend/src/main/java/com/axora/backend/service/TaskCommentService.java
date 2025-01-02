@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.axora.backend.dto.comment.CommentRequest;
 import com.axora.backend.dto.comment.CommentResponse;
+import com.axora.backend.entity.NotificationType;
+import com.axora.backend.entity.Role;
 import com.axora.backend.entity.Task;
 import com.axora.backend.entity.TaskComment;
 import com.axora.backend.entity.User;
@@ -21,6 +23,7 @@ public class TaskCommentService {
     private final TaskCommentRepository commentRepository;
     private final TaskRepository taskRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     public CommentResponse addComment(Long taskId, CommentRequest request) {
         Task task = taskRepository.findById(taskId)
@@ -35,6 +38,28 @@ public class TaskCommentService {
             .build();
 
         TaskComment savedComment = commentRepository.save(comment);
+
+        if (!task.getAssignedUser().getId().equals(currentUser.getId())) {
+            notificationService.createNotification(
+                task.getAssignedUser(),
+                task,
+                "Yeni Yorum",
+                String.format("%s görevinize yorum yaptı: %s", currentUser.getName(), comment.getContent()),
+                NotificationType.TASK_COMMENTED
+            );
+        }
+
+        if (task.getCreatedBy().getRole().equals(Role.ROLE_ADMIN) && 
+            !task.getCreatedBy().getId().equals(currentUser.getId())) {
+            notificationService.createNotification(
+                task.getCreatedBy(),
+                task,
+                "Yeni Yorum",
+                String.format("%s göreve yorum yaptı: %s", currentUser.getName(), comment.getContent()),
+                NotificationType.TASK_COMMENTED
+            );
+        }
+
         return mapToResponse(savedComment);
     }
 

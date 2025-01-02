@@ -57,6 +57,7 @@ public class TaskController {
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<TaskResponse> updateTaskStatus(
             @PathVariable Long id,
             @RequestBody TaskStatusUpdateRequest request) {
