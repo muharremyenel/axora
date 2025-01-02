@@ -89,5 +89,22 @@ export const taskService = {
     } catch (error) {
       throw handleError(error)
     }
+  },
+
+  deleteComment: async (taskId: number, commentId: number) => {
+    try {
+      await axios.delete(`/api/tasks/${taskId}/comments/${commentId}`)
+    } catch (error) {
+      throw handleError(error)
+    }
+  },
+
+  updateComment: async (taskId: number, commentId: number, data: CommentRequest) => {
+    try {
+      const response = await axios.put<CommentResponse>(`/api/tasks/${taskId}/comments/${commentId}`, data)
+      return response.data
+    } catch (error) {
+      throw handleError(error)
+    }
   }
 } 

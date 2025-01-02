@@ -44,11 +44,38 @@ public class TaskCommentService {
             .collect(Collectors.toList());
     }
 
+    public void deleteComment(Long taskId, Long commentId) {
+        TaskComment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new RuntimeException("Yorum bulunamadı"));
+        
+        User currentUser = userService.getCurrentUser();
+        if (!comment.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Bu yorumu silme yetkiniz yok");
+        }
+
+        commentRepository.delete(comment);
+    }
+
+    public CommentResponse updateComment(Long taskId, Long commentId, CommentRequest request) {
+        TaskComment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new RuntimeException("Yorum bulunamadı"));
+        
+        User currentUser = userService.getCurrentUser();
+        if (!comment.getUser().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Bu yorumu düzenleme yetkiniz yok");
+        }
+
+        comment.setContent(request.getContent());
+        TaskComment updatedComment = commentRepository.save(comment);
+        return mapToResponse(updatedComment);
+    }
+
     private CommentResponse mapToResponse(TaskComment comment) {
         return CommentResponse.builder()
             .id(comment.getId())
             .content(comment.getContent())
             .userName(comment.getUser().getName())
+            .userId(comment.getUser().getId())
             .createdAt(comment.getCreatedAt())
             .build();
     }
