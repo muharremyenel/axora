@@ -20,13 +20,13 @@ type LoginForm = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const setAuth = useAuthStore((state) => state.setAuth)
+  const { setAuth } = useAuthStore()
 
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   })
 
-  const loginMutation = useMutation({
+  const mutation = useMutation({
     mutationFn: authService.login,
     onSuccess: (data) => {
       setAuth(data.user, data.token)
@@ -36,14 +36,27 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Hata",
-        description: error.response?.data?.message || "Giriş yapılırken bir hata oluştu",
+        description: error.response?.data?.message || "Giriş yapılırken bir hata oluştu"
       })
     }
   })
 
   const onSubmit = (data: LoginForm) => {
-    loginMutation.mutate(data)
+    mutation.mutate(data)
   }
+
+  const handleForgotPassword = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (mutation.isError) {
+      toast({
+        variant: "destructive",
+        title: "Hata",
+        description: "Lütfen önce geçerli bir e-posta adresi girin"
+      });
+      return;
+    }
+    navigate("/forgot-password");
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center">
@@ -55,7 +68,7 @@ export default function LoginPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
-          {loginMutation.isError && (
+          {mutation.isError && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -94,9 +107,10 @@ export default function LoginPage() {
           <div className="flex items-center justify-between">
             <div className="text-sm">
               <Button
+                type="button"
                 variant="link"
                 className="text-primary hover:text-primary/90"
-                onClick={() => navigate("/forgot-password")}
+                onClick={handleForgotPassword}
               >
                 Şifremi Unuttum
               </Button>
@@ -106,9 +120,9 @@ export default function LoginPage() {
           <Button
             type="submit"
             className="w-full"
-            disabled={loginMutation.isPending}
+            disabled={mutation.isPending}
           >
-            {loginMutation.isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
+            {mutation.isPending ? "Giriş yapılıyor..." : "Giriş Yap"}
           </Button>
         </form>
       </div>
