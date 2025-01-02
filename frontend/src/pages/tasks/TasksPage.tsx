@@ -9,6 +9,7 @@ import { Task } from "@/types/task"
 import TaskStatusSelect from "@/components/tasks/TaskStatusSelect"
 import TaskFormDialog from "@/components/tasks/TaskFormDialog"
 import DeleteDialog from "@/components/common/DeleteDialog"
+import { useNavigate } from "react-router-dom"
 
 export default function TasksPage() {
   const { isAdmin, isAuthenticated } = useAuthStore()
@@ -16,6 +17,7 @@ export default function TasksPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState<Task>()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
 
   const { data: tasks = [], isLoading, isError, error } = useQuery({
     queryKey: ["tasks"],
@@ -46,6 +48,10 @@ export default function TasksPage() {
     setSelectedTask(task)
     setIsDeleteOpen(true)
   }
+
+  const handleRowClick = (task: Task) => {
+    navigate(`/tasks/${task.id}`);
+  };
 
   if (isLoading) {
     return <div>Yükleniyor...</div>
@@ -92,7 +98,11 @@ export default function TasksPage() {
           </thead>
           <tbody>
             {tasks?.map((task) => (
-              <tr key={task.id} className="border-b">
+              <tr 
+                key={task.id}
+                onClick={() => handleRowClick(task)}
+                className="cursor-pointer hover:bg-muted/50"
+              >
                 <td className="px-6 py-4 font-medium">{task.title}</td>
                 <td className="px-6 py-4">{task.description}</td>
                 {isAdmin() && <td className="px-6 py-4">{task.assignedUser || '-'}</td>}
@@ -115,13 +125,23 @@ export default function TasksPage() {
                 {isAdmin() && (
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(task)}>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(task);
+                        }}
+                      >
                         Düzenle
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => handleDelete(task)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(task);
+                        }}
                         className="text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />

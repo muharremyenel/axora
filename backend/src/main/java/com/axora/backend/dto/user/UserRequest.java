@@ -1,6 +1,7 @@
 package com.axora.backend.dto.user;
 
 import com.axora.backend.entity.Role;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -26,7 +27,9 @@ public class UserRequest {
     @Size(min = 6, message = "Şifre en az 6 karakter olmalıdır")
     private String password;
 
+    @Builder.Default
     private Role role = Role.ROLE_USER;
 
+    @Builder.Default
     private boolean active = true;
 } 

@@ -34,7 +34,7 @@ export default function TaskStatusSelect({ task }: TaskStatusSelectProps) {
         onValueChange={handleStatusChange}
         disabled={mutation.isPending}
       >
-        <SelectTrigger>
+        <SelectTrigger onClick={(e: React.MouseEvent) => e.stopPropagation()}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -46,7 +46,10 @@ export default function TaskStatusSelect({ task }: TaskStatusSelectProps) {
       {isChanged && (
         <Button 
           size="sm" 
-          onClick={() => mutation.mutate(selectedStatus)}
+          onClick={(e) => {
+            e.stopPropagation();
+            mutation.mutate(selectedStatus);
+          }}
           disabled={mutation.isPending}
         >
           Güncelle

@@ -15,6 +15,7 @@ import ProfilePage from "./pages/profile/ProfilePage"
 import { useAuthStore } from "./store/useAuthStore"
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage"
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage"
+import TaskDetailPage from "@/pages/tasks/TaskDetailPage"
 
 const queryClient = new QueryClient()
 
@@ -48,6 +49,7 @@ function App() {
           >
             <Route path="/" element={<DashboardPage />} />
             <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/tasks/:id" element={<TaskDetailPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             
             {/* Admin routes */}

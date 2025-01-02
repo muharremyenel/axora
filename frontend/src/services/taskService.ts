@@ -1,5 +1,6 @@
 import axios from "@/lib/axios"
 import { Task, CreateTaskRequest, UpdateTaskRequest, TaskFilter, TaskStatus } from "@/types/task"
+import { CommentRequest, CommentResponse } from "@/types/comment"
 
 const handleError = (error: any) => {
   if (error.response?.data?.message) {
@@ -8,7 +9,7 @@ const handleError = (error: any) => {
   throw new Error("Bir hata oluştu")
 }
 
-const taskService = {
+export const taskService = {
   getTasks: async (filters?: TaskFilter) => {
     try {
       const response = await axios.get<Task[]>("/tasks", { params: filters })
@@ -71,6 +72,22 @@ const taskService = {
       throw handleError(error)
     }
   },
-}
 
-export { taskService } 
+  getTaskComments: async (taskId: number) => {
+    try {
+      const response = await axios.get<CommentResponse[]>(`/api/tasks/${taskId}/comments`)
+      return response.data
+    } catch (error) {
+      throw handleError(error)
+    }
+  },
+
+  addComment: async (taskId: number, data: CommentRequest) => {
+    try {
+      const response = await axios.post<CommentResponse>(`/api/tasks/${taskId}/comments`, data)
+      return response.data
+    } catch (error) {
+      throw handleError(error)
+    }
+  }
+} 
