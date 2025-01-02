@@ -42,7 +42,7 @@ Axora is a comprehensive task management system built with modern technologies, 
 ### Using Docker (Recommended)
 
 1. Clone the repository:
-git clone https://github.com/yourusername/axora.git
+git clone https://github.com/muharremyenel/axora.git
 cd axora
 
 2. Start the application using Docker Compose:

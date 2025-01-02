@@ -1,15 +1,63 @@
 version: '3.8'
 
 services:
+  frontend:
+    container_name: axora-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    environment:
+      - VITE_API_URL=${API_URL:-http://localhost:8080}
+      - VITE_WS_URL=${WS_URL:-ws://localhost:8080/ws}
+    networks:
+      - axora-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    container_name: axora-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB:-axora_db}
+      - DB_USER=${POSTGRES_USER:-postgres}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+      - MAIL_HOST=mailhog
+      - MAIL_PORT=1025
+      - MAIL_USERNAME=${MAIL_USERNAME:-test@axora.com}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+    networks:
+      - axora-network
+    depends_on:
+      - postgres
+      - mailhog
+      - rabbitmq
+    restart: unless-stopped
+
   postgres:
     container_name: axora-postgres
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: axora_db
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-axora_db}
     ports:
-      - "5434:5432"
+      - "${POSTGRES_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -20,10 +68,10 @@ services:
     container_name: axora-pgadmin
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
     ports:
-      - "5050:80"
+      - "${PGADMIN_PORT:-5050}:80"
     depends_on:
       - postgres
     networks:
@@ -34,8 +82,8 @@ services:
     container_name: axora-mailhog
     image: mailhog/mailhog
     ports:
-      - "1026:1025" # SMTP port
-      - "8026:8025" # Web UI port
+      - "${MAIL_PORT:-1026}:1025"
+      - "${MAIL_UI_PORT:-8026}:8025"
     networks:
       - axora-network
     restart: unless-stopped
@@ -44,11 +92,11 @@ services:
     image: rabbitmq:3-management
     container_name: axora-rabbitmq
     ports:
-      - "5672:5672"  # AMQP port
-      - "15672:15672"  # Management UI port
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_UI_PORT:-15672}:15672"
     environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
     networks:
       - axora-network
     restart: unless-stopped
