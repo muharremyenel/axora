@@ -18,7 +18,7 @@ const queryClient = new QueryClient()
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-  const isAdmin = useAuthStore((state) => state.isAdmin)
+  //const isAdmin = useAuthStore((state) => state.isAdmin)
 
   return (
     <QueryClientProvider client={queryClient}>

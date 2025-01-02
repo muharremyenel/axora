@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { Plus, Trash2, Users } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { teamService } from "@/services/teamService"
@@ -8,7 +8,7 @@ import { useAuthStore } from "@/store/useAuthStore"
 import { Team } from "@/types/team"
 import TeamFormDialog from "@/components/teams/TeamFormDialog"
 import DeleteDialog from "@/components/common/DeleteDialog"
-import { Navigate, Link } from "react-router-dom"
+import {Link } from "react-router-dom"
 
 export default function TeamsPage() {
   const { isAdmin, isAuthenticated } = useAuthStore()
@@ -32,20 +32,20 @@ export default function TeamsPage() {
     },
   })
 
-  const handleCreate = () => {
-    setSelectedTeam(undefined)
-    setIsFormOpen(true)
-  }
+  //const handleCreate = () => {
+  //  setSelectedTeam(undefined)
+  //  setIsFormOpen(true)
+  //}
 
-  const handleEdit = (team: Team) => {
-    setSelectedTeam(team)
-    setIsFormOpen(true)
-  }
+  //const handleEdit = (team: Team) => {
+  //  setSelectedTeam(team)
+  //  setIsFormOpen(true)
+  //}
 
-  const handleDelete = (team: Team) => {
-    setSelectedTeam(team)
-    setIsDeleteOpen(true)
-  }
+  //const handleDelete = (team: Team) => {
+  //  setSelectedTeam(team)
+  //  setIsDeleteOpen(true)
+  //}
 
   if (isLoading) {
     return <div>Yükleniyor...</div>

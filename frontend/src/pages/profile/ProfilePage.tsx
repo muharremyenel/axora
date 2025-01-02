@@ -9,7 +9,7 @@ import ProfileFormDialog from "@/components/profile/ProfileFormDialog"
 import ChangePasswordDialog from "@/components/profile/ChangePasswordDialog"
 
 export default function ProfilePage() {
-  const { user: authUser } = useAuthStore()
+  const {} = useAuthStore()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isPasswordOpen, setIsPasswordOpen] = useState(false)
 

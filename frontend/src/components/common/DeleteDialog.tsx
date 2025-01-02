@@ -15,6 +15,7 @@ interface DeleteDialogProps {
   title: string
   description: string
   onConfirm: () => void
+  loading?: boolean
 }
 
 export default function DeleteDialog({
