@@ -54,24 +54,39 @@ The application will be available at:
 - PostgreSQL: localhost:5434
 - MailHog (for email testing): http://localhost:8025
 
-### Local Development Setup
+### Development Setup
 
-1. Start PostgreSQL using Docker:
-docker-compose up -d postgres mailhog
+### Local Development
+1. Copy `.env.example` to `.env`
+2. Update environment variables in `.env` if needed
+3. Start required services:
+   ```bash
+   docker-compose up -d postgres mailhog rabbitmq
+   ```
+4. Run backend:
+   ```bash
+   cd backend
+   ./mvnw spring-boot:run
+   ```
+5. Run frontend:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
-2. Backend Setup:
-cd backend
-./mvnw clean install
-./mvnw spring-boot:run
+### Docker Development
+1. Copy `.env.example` to `.env`
+2. Start all services:
+   ```bash
+   docker-compose up -d
+   ```
 
-3. Frontend Setup:
-cd frontend
-npm install
-npm run dev
+### Default Credentials
+- Admin: admin@axora.com / admin123
+- Test User: test@axora.com / test123
 
-4. Configure environment variables:
-Create a `.env` file in the frontend directory:
-VITE_API_URL=http://localhost:8080
+Note: These credentials are for development only.
 
 ## Docker Services
 
