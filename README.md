@@ -58,7 +58,32 @@ Axora is a comprehensive task management system built with modern technologies, 
 - Mock objects with Mockito
 - WebMvcTest for controller testing
 - JUnit 5 for test framework
-- JaCoCo for code coverage analysis (minimum 80%)
+- JaCoCo for code coverage analysis (minimum 70%)
+
+### CI/CD Pipeline
+- GitHub Actions for automated workflows
+- Parallel execution of backend and frontend tests
+- Required services automatically provisioned:
+  - PostgreSQL for database tests
+  - RabbitMQ for message queue tests
+  - MailHog for email tests
+- Test coverage reports with JaCoCo
+- Artifact storage for:
+  - Backend JAR files
+  - Frontend build files
+  - Test coverage reports
+
+### Pipeline Stages
+1. **Backend Tests**
+   - Unit tests
+   - Integration tests
+   - Coverage analysis (minimum 70%)
+2. **Frontend Tests**
+   - Component tests
+   - Coverage report
+3. **Build**
+   - Backend JAR packaging
+   - Frontend static file generation
 
 ### Security
 - JWT based authentication
